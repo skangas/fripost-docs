@@ -1,0 +1,224 @@
+# -*- mode: org-mode; truncate-lines: nil -*-
+#+TITLE: Systems documentation
+#+AUTHOR: The Free E-mail Association
+#+DESCRIPTION: Systems documentation for The Free E-mail Association
+#+KEYWORDS: 
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:nil skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:   
+#+LINK_HOME: 
+#+XSLT: 
+#+DRAWERS: HIDDEN STATE PROPERTIES CONTENT
+
+This is documentation of the server configuration used by the free e-mail association, given here in general interest of transparency.
+
+The complete documentation is the actual configuration files on the servers.  This document intends to give a general idea of the setup and be of help if we need to recreate a crashed server.  Also, if an administrator goes AWOL, it should be easy to pick up where he left of.
+
+We welcome all critisism, suggestions for improvements, additions etc.  Please send them to skangas@skangas.se.
+
+* BASIC SETUP -- Checklist after having installed a new Debian GNU/Linux-server
+
+  NB! Do not install any "tasks" during installation (web server etc.).
+  Make sure to answer "yes" to shadow passwords and MD5.
+
+** Uninstall a bunch of unecessary packages, among them:
+
+   sudo aptitude remove --purge openbsd-inetd portmap 
+
+** Install etckeeper
+   Used to keep track of /etc.  Install ASAP after install!
+   - /etc/etckeeper/etckeeper.conf
+     AVOID_COMMIT_BEFORE_INSTALL=1
+
+** Packages to install
+*** Administrative
+
+    sudo aptitude install openssh-server ntp ntpdate screen
+
+*** Security
+
+    sudo aptitude install logcheck harden-clients harden-servers
+
+    NB harden-clients conflicts with telnet, which as we know is very handy during configuration
+
+** Configure sshd
+   - /etc/ssh/sshd_config
+     PermitRootLogin no
+     PasswordAuthentication no
+     X11Forwarding no
+
+** Configure sudo
+   - Add relevant users to the sudo group
+   - sudo visudo
+     %sudo ALL= (ALL) ALL
+
+** Configure logcheck
+
+   - sudo aptitude install logcheck syslog-summary
+
+   - /etc/logcheck/logcheck.conf
+
+     INTRO=0
+     SENDMAILTO="skangas@skangas.se"
+
+   - /etc/logcheck/ignore.d.server/ntpd
+
+     - ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ ntpd\[[0-9]+\]: kernel time sync (disabled|enabled) [0-9]+$
+     + ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ ntpd\[[0-9]+\]: kernel time sync (disabled|enabled|status( change)?) [0-9]+$
+
+** Configuring aptitude and friends
+   We're going for a setup where we install many security updates automatically using the package "unattended-upgrades".  Automated upgrades are in general not a very good idea, but "unattended-upgrades" takes steps to minimize the issues with this kind of setup.  Given the Debian security teams track record we believe the positives outweigh the negatives.
+
+   For the situations when unattended-upgrades fails (e.g. when there are configuration changes), we should e-mail the administrator.  We will be using apticron to do this until the version of unattended-upgrades in stable supports mailing when an upgrade fails (the one in unstable does).
+
+   - sudo aptitude install apticron unattended-upgrades
+   - /etc/apt/apt.conf
+     :CONTENT:
+// Limit download speed
+//Acquire::http::Dl-Limit "70";
+
+/* Unsupported in the version of unattended-upgrades that is in stable,
+ * but will later send an e-mail when an upgrade fails.
+ * Until this works in stable, we will use apticron. */
+//Unattended-Upgrade::Mail "skangas@skangas.se";
+
+APT
+{
+  // Increase cache size to some arbitrary size.
+  // Remove this line completely once we have apt v0.7.26 in stable. (it defaults to no limit)
+  Cache-Limit "33554432";
+
+  // Configuration for /etc/cron.daily/apt
+  Periodic
+  {
+     // Do "apt-get update" automatically every n-days (0=disable)
+     Update-Package-Lists "1";
+     // Do "apt-get autoclean" every n-days (0=disable)
+     AutocleanInterval "1";
+     // Do "apt-get upgrade --download-only" every n-days (0=disable)
+     Download-Upgradeable-Packages "1";
+     // Run the "unattended-upgrade" security upgrade script every n days
+     Unattended-Upgrade "1"
+  }
+};
+
+Aptitude
+{
+  UI
+  {
+     Autoclean-After-Update:         true;
+     Auto-Fix-Broken:                false;
+     Keep-Recommends:                true;
+     Recommends-Important:           true;
+     Description-Visible-By-Default: false;
+     HelpBar                         false;
+     Menubar-Autohide                true;
+     Purge-Unused:                   true;
+     Prompt-On-Exit                  false;
+  }
+}
+     :END:
+   - /etc/apticron/apticron.conf
+     EMAIL="skangas@skangas.se"
+
+** TODO Fixa apt-inställningar på zetkin och luxemburg 
+
+
+* NEXT STEPS
+
+** Configuring the backup solution
+   General idea [[http://wikis.sun.com/display/BigAdmin/Using+rdist+rsync+with+sudo+for+remote+updating][from here]].  This is just a basic setup for now, will need to be changed to rsnapshot or perhaps something even more sophisticated like bacula.
+
+   1. Install rsync
+      - sudo aptitude install rsync
+   2. Create a key on the backup computer
+      - ssh-keygen -N "" -b 4096 -f ~/.ssh/backup_key
+      - cat .ssh/backup_key.pub
+   3. Create a user on the computer that will be backed up
+      - sudo adduser remupd
+      - turn of password using sudo vipw -s
+      - add the key to ~remupd/.ssh/authorized_keys2
+        prefix with: no-X11-forwarding,no-agent-forwarding,no-port-forwarding
+      - test the key:
+        ssh -i ~/.ssh/backup_key -l remupd host
+      - add remupd to sudo:
+        Cmnd_Alias      RSYNCDIST=/usr/bin/rsync
+        remupd	ALL=NOPASSWD:RSYNCDIST
+   3. Create a script on the backup computer to automatically backup
+   4. Add script to crontab
+
+
+** Configuring the e-mail servers
+
+   We will be using one main mail storage server, accessible by users via IMAP.  We will have two or more mail gateways that will relay e-mail to the main server over secure connections.
+
+   The main server will also be responsible for keeping all users in an MySQL database that will be replicated over
+
+*** Configuring the MySQL replication
+*** Configuring the SSH tunnel for SMTP
+
+   Steps to reproduce the configuration:
+   1. Create a user on the main e-mail server [if not done]
+      - sudo aptitude install openbsd-netcat
+      - sudo adduser smtptunnel
+      - echo "exit" > .bash_profile [to be sure]
+        We need bash, so we can not change the shell to something else.
+      - disable the password: sudo vipw -s
+
+   2. Create a key on the smarthost:
+      - sudo su
+      - ssh-keygen -N "" -b 4096 -f ~/.ssh/tunnel_key
+      - cat .ssh/tunnel_key.pub
+
+   3. Add this key to the "smtptunnel"-user on the smarthost
+      - echo "<thekey>" | sude tee .ssh/authorized_keys2
+      - Add this before "ssh-rsa" in authorized_keys2:
+        command="nc localhost 25",no-X11-forwarding,no-agent-forwarding,no-port-forwarding
+
+   4. Test the key on the client server:
+      - sudo ssh -l remupd -i /root/.ssh/tunnel_key smtptunnel@host
+
+   5. Configure openbsd-inetd:
+      (We use inetd instead of ssh -L because, among other things, ssh -L tends to hang.)
+
+      - sudo aptitude install openbsd-inetd
+      - /etc/inetd.conf
+
+        127.0.0.1:1917  stream  tcp     nowait  root    /usr/bin/ssh    -q -T -i /root/.ssh/tunnel_key smtptunnel@example.com
+
+      - Make sure the tunnel works:
+        telnet localhost 1917
+
+    6. Configure postfix on the client server to relay emails through the tunnel
+       
+       One quick-n-dirty example to try it out is:
+       - /etc/postfix/main.cf
+         relay_domains  = fri-epost.dyndns.org
+         transport_maps = hash:/etc/postfix/transport
+       - /etc/postfix/transport
+         hostname.org smtp:localhost:1917
+       - sudo postmap hash:/etc/postfix/transport
+
+
+# ssh tunnel to smarthost.com's SMTP server
+127.0.0.1:smtp  stream  tcp     nowait  root    /usr/bin/ssh    -q -T -i /root/.ssh/tunnel_key utumno@smarthost.com
+
+
+
+** Necessary stuff to fix for security
+
+*** Firewall rules
+
+
+** Ideas for improved security
+*** Increased rate of backups when the IMAP server goes down 
+*** Bacula for backups
+    Also has tripwire-like capabilities.
+*** Some kind of IDS
+
+
+
