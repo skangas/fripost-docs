@@ -138,7 +138,7 @@ Aptitude
    - /etc/apticron/apticron.conf
      EMAIL="skangas@skangas.se"
 
-** TODO Fixa apt-inställningar på zetkin och luxemburg 
+
 
 
 * NEXT STEPS
