@@ -85,6 +85,8 @@ We welcome all critisism, suggestions for improvements, additions etc.  Please s
 
    ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ kernel:( \[[[:digit:]]+\.[[:digit:]]+\])? imklog [0-9.]+, log source = /proc/kmsg started.$
    ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ rsyslogd: \[origin software="rsyslogd" swVersion="[0-9.]+" x-pid="[0-9]+" x-info="http://www.rsyslog.com"\] restart$
+   ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ kernel: Kernel logging (proc) stopped.$
+
 
 ** Configuring aptitude and friends
    We're going for a setup where we install many security updates automatically using the package "unattended-upgrades".  Automated upgrades are in general not a very good idea, but "unattended-upgrades" takes steps to minimize the issues with this kind of setup.  Given the Debian security teams track record we believe the positives outweigh the negatives.
@@ -140,8 +142,6 @@ Aptitude
      :END:
    - /etc/apticron/apticron.conf
      EMAIL="skangas@skangas.se"
-
-
 
 
 * NEXT STEPS
