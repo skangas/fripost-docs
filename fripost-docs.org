@@ -236,5 +236,16 @@ Aptitude
     Also has tripwire-like capabilities.
 *** Some kind of IDS
 
+* NEED TO KNOW FOR SERVER ADMINS
 
+** Use etckeeper
 
+   We keep /etc in a git repository using the tool etckeeper.
+
+   This means that every time you make changes to any files in /etc, you are expected to commit them using a descriptive commit message.  Please add a signature (initials or your username) since all commits will be made as root.
+
+   $ etckeeper commit "This is an example change that might fix the issues we have done.  -- Signature"
+
+   If you do not commit your changes, the next system upgrade will fail and whoever makes the upgrade will have to commit your changes for you.  They may have to guess as to why you made your changes.  Please do not put your co-administrators in this uncomfortable position.
+
+   It is also possible to use simple git commands in /etc, e.g. `git log'.  `etckeeper' has the benefit of keeping track of file permissions, which git by itself will not.
