@@ -175,10 +175,14 @@ Aptitude
    The main server will also be responsible for keeping all users in an MySQL database that will be replicated over
 
 *** Configuring the MySQL replication
-*** Configuring the SSH tunnel for SMTP
+*** Configuring the SSH tunnel between a new smarthost and the main IMAP server
+
+    Definitons:
+    IMAP server = the main storage server
+    smarthost = the receiving server (configured as MX)
 
    Steps to reproduce the configuration:
-   1. Create a user on the main e-mail server [if not done]
+   1. Create a user on the main e-mail server [this should already be done on the IMAP server]
       - sudo aptitude install openbsd-netcat
       - sudo adduser smtptunnel
       - echo "exit" > .bash_profile [to be sure]
@@ -190,15 +194,15 @@ Aptitude
       - ssh-keygen -N "" -b 4096 -f ~/.ssh/tunnel_key
       - cat .ssh/tunnel_key.pub
 
-   3. Add this key to the "smtptunnel"-user on the smarthost
-      - echo "<thekey>" | sude tee .ssh/authorized_keys2
+   3. Add this key to the user `smtptunnel' on the IMAP server
+      - echo "<thekey>" | sudo tee .ssh/authorized_keys2
       - Add this before "ssh-rsa" in authorized_keys2:
         command="nc localhost 25",no-X11-forwarding,no-agent-forwarding,no-port-forwarding
 
-   4. Test the key on the client server:
-      - sudo ssh -l remupd -i /root/.ssh/tunnel_key smtptunnel@host
+   4. Test the key on the smarthost:
+      - sudo ssh -l smtptunnel -i /root/.ssh/tunnel_key smtptunnel@example.com
 
-   5. Configure openbsd-inetd:
+   5. Configure openbsd-inetd on the smarthost:
       (We use inetd instead of ssh -L because, among other things, ssh -L tends to hang.)
 
       - sudo aptitude install openbsd-inetd
@@ -209,19 +213,16 @@ Aptitude
       - Make sure the tunnel works:
         telnet localhost 1917
 
-    6. Configure postfix on the client server to relay emails through the tunnel
+    6. Configure postfix on the smarthost to relay emails through the tunnel
        
        One quick-n-dirty example to try it out is:
        - /etc/postfix/main.cf
-         relay_domains  = fri-epost.dyndns.org
+         relay_domains  = fripost.org
          transport_maps = hash:/etc/postfix/transport
        - /etc/postfix/transport
-         hostname.org smtp:localhost:1917
+         fripost.org smtp:localhost:1917
        - sudo postmap hash:/etc/postfix/transport
 
-
-# ssh tunnel to smarthost.com's SMTP server
-127.0.0.1:smtp  stream  tcp     nowait  root    /usr/bin/ssh    -q -T -i /root/.ssh/tunnel_key utumno@smarthost.com
 
 
 
@@ -235,6 +236,8 @@ Aptitude
 *** Bacula for backups
     Also has tripwire-like capabilities.
 *** Some kind of IDS
+
+
 
 * NEED TO KNOW FOR SERVER ADMINS
 
