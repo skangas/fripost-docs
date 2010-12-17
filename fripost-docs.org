@@ -170,11 +170,46 @@ Aptitude
 
 ** Configuring the e-mail servers
 
-   We will be using one main mail storage server, accessible by users via IMAP.  We will have two or more mail gateways that will relay e-mail to the main server over secure connections.
+   We will be using one main mail storage server, accessible by users via IMAP.
+   This server should be referred to as the main `IMAP server'. We will have two
+   or more mail gateways that will relay e-mail to the main server over secure
+   connections.  These are called `smarthosts'.
 
-   The main server will also be responsible for keeping all users in an MySQL database that will be replicated over
+   The main server will also be responsible for keeping all users in an MySQL
+   database that will be replicated using MySQL.
 
-*** Configuring the MySQL replication
+*** Basic configuration of MySQL
+**** Installing MySQL
+     - sudo apt-get-install mysql-server
+     - generate a long (25 characters) password for the mysql root user
+
+**** Configuring the main IMAP server
+     We will use four tables `alias', `domain', `log' and `mailbox'.
+     
+     // FIXME; add description of tables
+     :HIDDEN:
+mysql> show tables;
+
+mysql> describe alias;
+
+mysql> describe domain;
+
+mysql> describe log;
+
+mysql> describe mailbox;
+     :END:
+
+      - to set up the tables, use the following schema // FIXME: Add schema
+        :HIDDEN:
+
+        :END:
+
+**** Configuring the MySQL replication
+     This link looks promising:
+     http://www.howtoforge.com/mysql_database_replication
+
+     However, we will be using an SSH tunnel for this, so this needs to be described.
+
 *** Configuring the SSH tunnel between a new smarthost and the main IMAP server
 
     Definitons:
