@@ -178,12 +178,71 @@ Aptitude
    The main server will also be responsible for keeping all users in an MySQL
    database that will be replicated using MySQL.
 
+*** Configuring an SSH tunnel between two hosts
+
+    Definitons:
+    originating host = the host that will be connecting
+    destination host = the host that runs some service
+
+**** Preparing steps on the destination
+
+   1a. Install necessary software on the destination host:
+
+      - sudo aptitude install openbsd-netcat
+
+   1b. Create a new user on the destination host:
+
+      - sudo adduser smtptunnel
+      - echo "exit" | sudo -u smtptunnel tee ~smtptunnel/.bash_profile
+      - disable the password: sudo vipw -s
+
+        Note: We need bash, so we can not change the shell to something else.
+
+**** Preparing steps on the originating server
+
+   1c. Install necessary software on the originating server:
+
+      - sudo aptitude install openbsd-inetd
+
+        Comment: We use inetd instead of ssh -L because, among other things, ssh
+        -L tends to hang.
+
+**** Steps to set up a new tunnel 
+
+   2. Create a key on the originating server:
+      - sudo su
+      - ssh-keygen -N "" -b 4096 -f ~/.ssh/tunnel_key
+      - cat .ssh/tunnel_key.pub
+
+   3. Add this key to the user `smtptunnel' on the IMAP server
+      - echo "<thekey>" | sudo tee .ssh/authorized_keys2
+      - Add this before "ssh-rsa" in authorized_keys2:
+        command="nc localhost 25",no-X11-forwarding,no-agent-forwarding,no-port-forwarding
+
+   4. Test the key on the smarthost:
+      - sudo ssh -l smtptunnel -i /root/.ssh/tunnel_key example.com
+
+   5. Configure openbsd-inetd on the smarthost:
+
+      - /etc/inetd.conf
+:HIDDEN:
+127.0.0.1:1917  stream  tcp     nowait  root    /usr/bin/ssh    -q -T -i /root/.ssh/tunnel_key smtptunnel@example.com
+:END:
+      - sudo /etc/init.d/openbsd-inetd restart
+
+   You should now be able to connect through the tunnel using something like:
+
+   telnet localhost 1917
+
 *** Basic configuration of MySQL
 **** Installing MySQL
      - sudo apt-get-install mysql-server
      - generate a long (25 characters) password for the mysql root user
 
 **** Configuring the main IMAP server
+
+     - create database mail;
+
      We will use four tables `alias', `domain', `log' and `mailbox'.
      
      // FIXME; add description of tables
@@ -205,52 +264,108 @@ mysql> describe mailbox;
         :END:
 
 **** Configuring the MySQL replication
-     This link looks promising:
-     http://www.howtoforge.com/mysql_database_replication
+     
+     [[http://dev.mysql.com/doc/refman/5.0/en/replication.html][MySQL 5.0 Reference Manual :: 16 Replication]]
 
-     However, we will be using an SSH tunnel for this, so this needs to be described.
+     We will use MySQL replication to keep the MySQL user data on the smarthosts
+     in sync with the data held on the main IMAP server.
 
-*** Configuring the SSH tunnel between a new smarthost and the main IMAP server
+     We begin by setting up an SSH tunnel.  This process is described above.
+     The rest is fairly straight-forward (instructions below adapted from [[http://www.howtoforge.com/mysql_database_replication][here]]).
+
+     - Set up the SSH tunnel.
+
+***** Configure the master
+
+     - Add this to my.cnf:
+:HIDDEN:
+server-id		= 1
+log_bin			= /var/log/mysql/mysql-bin.log
+expire_logs_days	= 10
+max_binlog_size         = 100M
+binlog_do_db		= mail
+:END:
+
+     - /etc/init.d/mysql restart
+
+     - Enter MySQL shell and create user with replication privileges:
+       mysql -u root -p
+
+       When in shell, do the following (replace <password> with something better):
+
+       create database mail;
+
+       GRANT REPLICATION SLAVE ON *.* TO 'slave_user'@'%' IDENTIFIED BY '<password>';
+       FLUSH PRIVILEGES;
+
+       # Is this only needed when using "load data from master"?
+       grant reload, super, replication client on *.* to 'slave_user';
+
+       USE mail;
+       FLUSH TABLES WITH READ LOCK;
+       SHOW MASTER STATUS;
+
+       unlock tables;
+       quit;
+       
+***** Configure the slave
+
+      - Enter the MySQL shell and create the database:
+
+      mysql -u root -p
+      Enter password:
+      CREATE DATABASE mail;
+      quit;
+
+      - /etc/mysql/my.cnf
+:HIDDEN:
+tmpdir		= /var/lib/mysql/tmp
+# Note that the server-id must be different on all hosts
+server-id		= 2
+master-host		= 127.0.0.1
+master-port		= 1949
+master-user		= slave_user
+master-password		= <password>
+master-connect-retry	= 60
+replicate-do-db		= mail
+:END:
+      - create the temporary directory:
+        
+        mkdir /var/lib/mysql/tmp
+        chown mysql:mysql !$
+        chmod 0750 !$
+
+      - /etc/init.d/mysql restart
+      - Enter the MySQL shell and make the replication:
+
+      mysql -u root -p
+      Enter password:
+      LOAD DATA FROM MASTER;
+      quit;
+
+      A strange bug bit me at this point, notes:
+
+      start slave; stop slave;
+      show slave status\G
+
+      [[http://dev.mysql.com/doc/refman/5.0/en/change-master-to.html][12.5.2.1. CHANGE MASTER TO Syntax]]
+
+      CHANGE MASTER TO MASTER_PORT=1949, MASTER_CONNECT_RETRY=60;
+
+
+*** Configuring a new smarthost to relay e-mail to the main IMAP server
 
     Definitons:
     IMAP server = the main storage server
     smarthost = the receiving server (configured as MX)
 
-   Steps to reproduce the configuration:
-   1. Create a user on the main e-mail server [this should already be done on the IMAP server]
-      - sudo aptitude install openbsd-netcat
-      - sudo adduser smtptunnel
-      - echo "exit" > .bash_profile [to be sure]
-        We need bash, so we can not change the shell to something else.
-      - disable the password: sudo vipw -s
+    First setupa an SSH tunnel between the hosts according to instructions given
+    above in this document.
 
-   2. Create a key on the smarthost:
-      - sudo su
-      - ssh-keygen -N "" -b 4096 -f ~/.ssh/tunnel_key
-      - cat .ssh/tunnel_key.pub
-
-   3. Add this key to the user `smtptunnel' on the IMAP server
-      - echo "<thekey>" | sudo tee .ssh/authorized_keys2
-      - Add this before "ssh-rsa" in authorized_keys2:
-        command="nc localhost 25",no-X11-forwarding,no-agent-forwarding,no-port-forwarding
-
-   4. Test the key on the smarthost:
-      - sudo ssh -l smtptunnel -i /root/.ssh/tunnel_key smtptunnel@example.com
-
-   5. Configure openbsd-inetd on the smarthost:
-      (We use inetd instead of ssh -L because, among other things, ssh -L tends to hang.)
-
-      - sudo aptitude install openbsd-inetd
-      - /etc/inetd.conf
-
-        127.0.0.1:1917  stream  tcp     nowait  root    /usr/bin/ssh    -q -T -i /root/.ssh/tunnel_key smtptunnel@example.com
-
-      - Make sure the tunnel works:
-        telnet localhost 1917
-
-    6. Configure postfix on the smarthost to relay emails through the tunnel
+    Next, you need to configure postfix on the smarthost to relay emails through
+    the tunnel:
        
-       One quick-n-dirty example to try it out is:
+       One quick-and-dirty example to try it out is:
        - /etc/postfix/main.cf
          relay_domains  = fripost.org
          transport_maps = hash:/etc/postfix/transport
@@ -258,13 +373,10 @@ mysql> describe mailbox;
          fripost.org smtp:localhost:1917
        - sudo postmap hash:/etc/postfix/transport
 
-
-
-
 ** Necessary stuff to fix for security
 
 *** Firewall rules
-
+TODO: Add nice rules.
 
 ** Ideas for improved security
 *** Increased rate of backups when the IMAP server goes down 
