@@ -351,7 +351,26 @@ replicate-do-db		= mail
       [[http://dev.mysql.com/doc/refman/5.0/en/change-master-to.html][12.5.2.1. CHANGE MASTER TO Syntax]]
 
       CHANGE MASTER TO MASTER_PORT=1949, MASTER_CONNECT_RETRY=60;
+*** Configuring the main IMAP server to receive e-mail to Maildir
 
+    First setup the tables like above.
+
+    - sudo apt-get install maildrop
+    - /etc/postfix/main.cf
+:HIDDEN:
+# Not really needed until we switch to using Courier maildrop
+maildrop_destination_recipient_limit = 1
+
+virtual_mailbox_base = /home/mail/virtual
+:END:
+    - sudo mkdir -p /home/mail/virtual/fripost.org/example/
+    - sudo maildirmake /home/mail/virtual/fripost.org/example/Maildir
+    - mysql -u root -p
+      INSERT INTO mailbox (username,password,name,maildir,domain)
+      VALUES ('exempel@fripost.org','test666','Exempelanvändare','fripost.org/exempel/Maildir/','fripost.org');
+    - /etc/init.d/postfix restart
+
+    Now it should work to send an e-mail to exempel@fripost.org
 
 *** Configuring a new smarthost to relay e-mail to the main IMAP server
 
@@ -372,6 +391,8 @@ replicate-do-db		= mail
        - /etc/postfix/transport
          fripost.org smtp:localhost:1917
        - sudo postmap hash:/etc/postfix/transport
+
+*** Setting up dovecot
 
 ** Necessary stuff to fix for security
 
