@@ -156,11 +156,11 @@ Aptitude
       - cat .ssh/backup_key.pub
    3. Create a user on the computer that will be backed up
       - sudo adduser remupd
-      - turn of password using sudo vipw -s
-      - add the key to ~remupd/.ssh/authorized_keys2
+      - sudo passwd -d remupd
+      - add the public key from above to ~remupd/.ssh/authorized_keys2
         prefix with: no-X11-forwarding,no-agent-forwarding,no-port-forwarding
       - test the key:
-        ssh -i ~/.ssh/backup_key -l remupd host
+        ssh -i ~/.ssh/backup_key -l remupd example.com
       - add remupd to sudo:
         Cmnd_Alias      RSYNCDIST=/usr/bin/rsync
         remupd	ALL=NOPASSWD:RSYNCDIST
