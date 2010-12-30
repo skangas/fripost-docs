@@ -29,7 +29,14 @@ This document intends to give a general idea of the setup and be of help if we
 need to recreate a crashed server.  Also, if an administrator goes AWOL, it
 should be easy to pick up where he left of.
 
-We welcome all critisism, suggestions for improvements, additions etc.  Please
+The steps taken here will not necessarily give a perfect replica of our systems.
+We are constantly (yes, constantly) working on improving the security and
+reliability of our systems.  We do not think of Security is not a shoot and
+forget sort of thing but instead an ongoing effort.  Thus, while we strive to
+document all configuration that we consider stable enough, the documentation may
+sometimes lag behind.
+
+We welcome all criticism, suggestions for improvements, additions etc.  Please
 send them to skangas@skangas.se.
 
 * BASIC SETUP -- Checklist after having installed a new Debian GNU/Linux-server
