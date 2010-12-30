@@ -122,6 +122,11 @@ X11Forwarding no
 ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ rsyslogd: \[origin software="rsyslogd" swVersion="[0-9.]+" x-pid="[0-9]+" x-info="http://www.rsyslog.com"\] restart$
 ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ kernel: Kernel logging (proc) stopped.$
 :END:
+   - /etc/logcheck/ignore.d.server/ddclient
+:HIDDEN:
++ ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ ddclient\[[0-9]+\]: WARNING:  file /var/cache/ddclient/ddclient.cache, line [0-9]+: Invalid Value for keyword 'ip' = ''$
++ ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ ddclient\[[0-9]+\]: WARNING:  updating [._[:alnum:]-]+: nochg: No update required; unnecessary attempts to change to the current address are considered abusive$
+:END:
 
 ** Configuring aptitude and friends
 
