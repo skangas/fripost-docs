@@ -52,7 +52,7 @@ send them to skangas@skangas.se.
      AVOID_COMMIT_BEFORE_INSTALL=1
    - cd /etc && sudo etckeeper init && sudo etckeeper commit "first commit"
 
-** Uninstall a bunch of unecessary packages
+** Uninstall a bunch of unnecessary packages
 
    sudo aptitude remove --purge debian-faq dictionaries-common doc-debian \
    doc-linux-text iamerican ibritish ispell laptop-detect nfs-common \
@@ -223,7 +223,7 @@ Aptitude
 
 *** Configuring an SSH tunnel between two hosts
 
-    Definitons:
+    Definitions:
     originating host = the host that will be connecting
     destination host = the host that runs some service
 
@@ -417,11 +417,11 @@ virtual_mailbox_base = /home/mail/virtual
 
 *** Configuring a new smarthost to relay e-mail to the main IMAP server
 
-    Definitons:
+    Definitions:
     IMAP server = the main storage server
     smarthost = the receiving server (configured as MX)
 
-    First setupa an SSH tunnel between the hosts according to instructions given
+    First setup an SSH tunnel between the hosts according to instructions given
     above in this document.
 
     Next, you need to configure postfix on the smarthost to relay emails through
