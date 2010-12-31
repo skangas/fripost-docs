@@ -24,6 +24,8 @@ separate file called "COPYING".
 This is documentation of the server configuration used by the free e-mail
 association, given here in general interest of transparency.
 
+Debian GNU/Linux lenny is the target system.
+
 The complete documentation is the actual configuration files on the servers.
 This document intends to give a general idea of the setup and be of help if we
 need to recreate a crashed server.  Also, if an administrator goes AWOL, it
@@ -31,8 +33,8 @@ should be easy to pick up where he left of.
 
 The steps taken here will not necessarily give a perfect replica of our systems.
 We are constantly (yes, constantly) working on improving the security and
-reliability of our systems.  We do not think of Security is not a shoot and
-forget sort of thing but instead an ongoing effort.  Thus, while we strive to
+reliability of our systems.  We do not think of security as a shoot and forget
+sort of thing but instead as an ongoing effort.  Thus, while we strive to
 document all configuration that we consider stable enough, the documentation may
 sometimes lag behind.
 
@@ -195,7 +197,10 @@ Aptitude
 * NEXT STEPS
 
 ** Configuring the backup solution
-   General idea [[http://wikis.sun.com/display/BigAdmin/Using+rdist+rsync+with+sudo+for+remote+updating][from here]].  This is just a basic setup for now, will need to be changed to rsnapshot or perhaps something even more sophisticated like bacula.
+
+   General idea [[http://wikis.sun.com/display/BigAdmin/Using+rdist+rsync+with+sudo+for+remote+updating][from here]].  This is just a basic setup for now, will need to be
+   changed to rsnapshot or perhaps something even more sophisticated like
+   bacula.
 
    1. Install rsync
       - sudo aptitude install rsync
@@ -281,6 +286,7 @@ Aptitude
    You should now be able to connect through the tunnel using something like:
 
    telnet localhost 1917
+
 
 *** Basic configuration of MySQL
 **** Installing MySQL
@@ -399,6 +405,7 @@ replicate-do-db		= mail
       [[http://dev.mysql.com/doc/refman/5.0/en/change-master-to.html][12.5.2.1. CHANGE MASTER TO Syntax]]
 
       CHANGE MASTER TO MASTER_PORT=1949, MASTER_CONNECT_RETRY=60;
+
 *** Configuring the main IMAP server to receive e-mail to Maildir
 
     First setup the tables like above.
@@ -419,6 +426,7 @@ virtual_mailbox_base = /home/mail/virtual
     - /etc/init.d/postfix restart
 
     Now it should work to send an e-mail to exempel@fripost.org
+
 
 *** Configuring a new smarthost to relay e-mail to the main IMAP server
 
