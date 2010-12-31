@@ -440,7 +440,71 @@ virtual_mailbox_base = /home/mail/virtual
          fripost.org smtp:localhost:1917
        - sudo postmap hash:/etc/postfix/transport
 
+
 *** Setting up dovecot
+
+    - sudo apt-get install dovecot
+
+    - /etc/dovecot/dovecot.conf
+
+      Note: These settings are already in the file but commented out or set to
+      other values.
+
+:HIDDEN:
+protocols = imaps
+protocol imap {
+	ssl_listen = *:993
+}
+disable_plaintext_auth = yes
+mail_location = maildir:/home/mail/virtual/%d/%u/Maildir
+
+# Set this to something that works for the Maildirs
+first_valid_uid = XXX
+first_valid_gid = XXX
+
+# Allow clients to be fancy if they want to
+mechanisms = plain cram-md5
+
+#passdb pam <--- comment this stuff out
+
+# uncomment this stuff
+passdb sql {
+  args = /etc/dovecot/dovecot-sql.conf
+}
+
+#userdb passwd  <--- comment this stuff out
+
+# uncomment this stuff
+userdb sql {
+   args = /etc/dovecot/dovecot-sql.conf
+}
+
+# Do not needlessly run as root
+user = nobody
+:END:
+
+    - /etc/dovecot/dovecot-sql.conf
+
+:HIDDEN:
+driver = mysql
+connect = host=127.0.0.1 port=3306 user=XXX password=XXX dbname=mail
+
+# Salted MD5
+default_pass_scheme = SMD5
+
+password_query = SELECT username AS user, password FROM mailbox WHERE username = '%u' AND domain = '%d'
+
+# replace XXX with relevant numbers for the system
+user_query = SELECT concat('/home/mail/virtual/',maildir) AS mail, XXX AS uid, XXX AS gid FROM mailbox WHERE username = '%u' AND domain = '%d'
+:END:
+
+    - sudo /etc/init.d/dovecot restart
+
+      After adding a user, you should be able to login using any IMAP client.
+
+** Configuring the webserver
+
+   - sudo apt-get install apache2
 
 ** Necessary stuff to fix for security
 
