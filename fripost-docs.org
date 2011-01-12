@@ -63,7 +63,7 @@ send them to skangas@skangas.se.
 ** Packages to install
 *** Administrative
 
-    sudo aptitude install openssh-server ntp ntpdate screen
+    sudo aptitude install openssh-server molly-guard ntp ntpdate screen
 
 *** Security
 
@@ -170,7 +170,7 @@ APT
      // Do "apt-get upgrade --download-only" every n-days (0=disable)
      Download-Upgradeable-Packages "1";
      // Run the "unattended-upgrade" security upgrade script every n days
-     Unattended-Upgrade "1"
+     Unattended-Upgrade "1";
   }
 };
 
