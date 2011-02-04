@@ -63,7 +63,11 @@ send them to skangas@skangas.se.
 ** Packages to install
 *** Administrative
 
-    sudo aptitude install openssh-server molly-guard ntp ntpdate screen
+    - sudo aptitude install openssh-server molly-guard ntp ntpdate screen
+
+    If the system is on a dynamic IP (e.g. using DHCP):
+
+    - sudo aptitude install resolvconf
 
 *** Security
 
@@ -97,7 +101,7 @@ X11Forwarding no
    already in the sudo group.  Otherwise, follow these steps:
 
    - Add relevant users to the sudo group
-   - sudo visudo
+   - EDITOR="emacs" sudo visudo
      %sudo ALL= (ALL) ALL
 
 ** Configure logcheck
@@ -297,7 +301,7 @@ Aptitude
 skip-innodb
 :END:
 
-**** Configuring the main IMAP server
+**** MySQL on the main IMAP server
 
      - create database mail;
 
@@ -595,7 +599,7 @@ TODO: Add nice rules.
    expected to commit them using a descriptive commit message.  Please add a
    signature (initials or your username) since all commits will be made as root.
 
-   $ etckeeper commit "postfix: enable to relay messages to remote hosts via smtp /Signature"
+   $ etckeeper commit "postfix: enable to relay messages to remote hosts via smtp /skangas"
 
    If you do not commit your changes, the next system upgrade will fail and
    whoever makes the upgrade will have to commit your changes for you.  They may
