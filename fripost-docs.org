@@ -241,56 +241,70 @@ Aptitude
     originating host = the host that will be connecting
     destination host = the host that runs some service
 
-**** Preparing steps on the destination
+    Begin by setting a few environment variables:
+
+    TUNNEL_KEY="my_tunnel_key"
+    TUNNEL_USER="tunneluser"
+    TUNNEL_HOME="/home/$TUNNEL_USER"
+    DEST_PORT="25"
+    ORIGIN_PORT="1917"
+
+**** Preparing the destination host
 
    1a. Install necessary software on the destination host:
 
-      - sudo aptitude install openbsd-netcat
+      sudo aptitude install netcat-openbsd
 
    1b. Create a new user on the destination host:
 
-      - sudo adduser smtptunnel
-      - echo "exit" | sudo -u smtptunnel tee ~smtptunnel/.bash_profile
-      - disable the password: sudo vipw -s
+      sudo adduser --home=$TUNNEL_HOME --shell=`type rbash` $TUNNEL_USER
+      echo "exit" | sudo -u $TUNNEL_USER tee $TUNNEL_HOME/.bash_profile
+      sudo passwd -d $TUNNEL_USER
 
         Note: We need bash, so we can not change the shell to something else.
 
-**** Preparing steps on the originating server
+      (Also, make sure to add this user to AllowedUsers in /etc/ssh/sshd_config)
+
+**** Preparing the originating server
 
    1c. Install necessary software on the originating server:
 
-      - sudo aptitude install openbsd-inetd
+      sudo aptitude install openbsd-inetd
 
         Comment: We use inetd instead of ssh -L because, among other things, ssh
         -L tends to hang.
 
 **** Steps to set up a new tunnel 
 
-   2. Create a key on the originating server:
-      - sudo su
-      - ssh-keygen -N "" -b 4096 -f ~/.ssh/tunnel_key
-      - cat .ssh/tunnel_key.pub
+   2. Create a key on the originating host:
 
-   3. Add this key to the user `smtptunnel' on the IMAP server
-      - echo "<thekey>" | sudo tee .ssh/authorized_keys2
-      - Add this before "ssh-rsa" in authorized_keys2:
-        command="nc localhost 25",no-X11-forwarding,no-agent-forwarding,no-port-forwarding
+      sudo ssh-keygen -N "" -b 4096 -f /root/.ssh/$TUNNEL_KEY
+      sudo cat /root/.ssh/$TUNNEL_KEY.pub
 
-   4. Test the key on the smarthost:
-      - sudo ssh -l smtptunnel -i /root/.ssh/tunnel_key example.com
+   3. Add this key to the user `smtptunnel' on the destination:
 
-   5. Configure openbsd-inetd on the smarthost:
+      THEPUBLICKEY="ssh-rsa xxxxxxxxxxx"
+
+      sudo -u $TUNNEL_USER mkdir $TUNNEL_HOME/.ssh
+      echo "command=\"nc localhost $DEST_PORT\",no-X11-forwarding,no-agent-forwarding,\
+no-port-forwarding $THE_PUBLIC_KEY" | sudo -u $TUNNEL_USER tee $TUNNEL_HOME/.ssh/authorized_keys2
+
+   4. Test the key on the originating host:
+
+      sudo ssh -v -l $TUNNEL_USER -i /root/.ssh/$TUNNEL_KEY destination.example.com
+
+   5. Configure openbsd-inetd on the originating host:
 
       - /etc/inetd.conf
 :HIDDEN:
-127.0.0.1:1917  stream  tcp     nowait  root    /usr/bin/ssh    -q -T -i /root/.ssh/tunnel_key smtptunnel@example.com
+127.0.0.1:$ORIGIN_PORT  stream  tcp     nowait  root    /usr/bin/ssh    -q -T -i /root/.ssh/tunnel_key smtptunnel@example.com
 :END:
-      - sudo /etc/init.d/openbsd-inetd restart
+      sudo /etc/init.d/openbsd-inetd restart
 
-   You should now be able to connect through the tunnel using something like:
+   You should now be able to connect through the tunnel from the originating
+   host using something like:
 
-   telnet localhost 1917
-
+   telnet localhost $ORIGIN_PORT
 
 *** Basic configuration of MySQL
 **** Installing MySQL
