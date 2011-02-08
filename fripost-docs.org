@@ -197,9 +197,30 @@ Aptitude
    - /etc/apticron/apticron.conf
      EMAIL="skangas@skangas.se"
 
+** Reconfigure exim
+
+   - sudo dpkg-reconfigure exim4-config
+:HIDDEN:
+   - select "mail sent by smarthost; no local mail"
+   - hostname:
+     host.example.com
+   - listen on:
+     127.0.0.1
+   - other destinations:
+     [empty]
+   - visible domain name:
+     host.example.com
+   - address of outgoing smarthost
+     smtp.bredband.net [or whatever the ISP uses]
+   - number of DNS queries minimal?
+     no
+   - split configuration?
+     no
+:END:
+
+
 
 * NEXT STEPS
-
 ** Configuring the backup solution
 
    General idea [[http://wikis.sun.com/display/BigAdmin/Using+rdist+rsync+with+sudo+for+remote+updating][from here]].  This is just a basic setup for now, will need to be
