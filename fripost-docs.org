@@ -1,7 +1,7 @@
 # -*- mode: org-mode; truncate-lines: nil -*-
 #+TITLE: Systems documentation
-#+AUTHOR: The Free E-mail Association
-#+DESCRIPTION: Systems documentation for The Free E-mail Association
+#+AUTHOR: Fripost -- the Free E-mail Association
+#+DESCRIPTION: Systems documentation for Fripost, the Free E-mail Association
 #+KEYWORDS: 
 #+LANGUAGE:  en
 #+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
@@ -21,8 +21,8 @@ Foundation; with no Invariant Sections, no Front-Cover Texts and
 no Back-Cover Texts.  A copy of the license is included in a
 separate file called "COPYING".
 
-This is documentation of the server configuration used by the free e-mail
-association, given here in general interest of transparency.
+This is the documentation of the server configuration used by the free e-mail
+association, given here to provide a transparent system.
 
 Debian GNU/Linux lenny is the target system.
 
@@ -224,16 +224,24 @@ Aptitude
    3. Create a script on the backup computer to automatically backup
    4. Add script to crontab
 
-
 ** Configuring the e-mail servers
 
-   We will be using one main mail storage server, accessible by users via IMAP.
-   This server should be referred to as the main `IMAP server'. We will have two
-   or more mail gateways that will relay e-mail to the main server over secure
-   connections.  These are called `smarthosts'.
+*** Introduction
+**** Overview
 
-   The main server will also be responsible for keeping all users in an MySQL
-   database that will be replicated using MySQL.
+    We will be using one main mail storage server, accessible by users via IMAP.
+    This server should be referred to as the main `IMAP server'. We will have two
+    or more mail gateways that will relay e-mail to the main server over secure
+    connections.  These are called `smarthosts'.
+
+    The main server will also be responsible for keeping all users in an MySQL
+    database that will be replicated using MySQL.
+
+**** Definitions
+
+IMAP server = the main storage server
+
+smarthost = the server receiving email from the internet (configured as MX)
 
 *** Configuring an SSH tunnel between two hosts
 
@@ -249,51 +257,49 @@ Aptitude
     DEST_PORT="25"
     ORIGIN_PORT="1917"
 
-**** Preparing the destination host
+**** Prepare origin
 
-   1a. Install necessary software on the destination host:
-
-      sudo aptitude install netcat-openbsd
-
-   1b. Create a new user on the destination host:
-
-      sudo adduser --home=$TUNNEL_HOME --shell=`type rbash` $TUNNEL_USER
-      echo "exit" | sudo -u $TUNNEL_USER tee $TUNNEL_HOME/.bash_profile
-      sudo passwd -d $TUNNEL_USER
-
-        Note: We need bash, so we can not change the shell to something else.
-
-      (Also, make sure to add this user to AllowedUsers in /etc/ssh/sshd_config)
-
-**** Preparing the originating server
-
-   1c. Install necessary software on the originating server:
-
-      sudo aptitude install openbsd-inetd
-
-        Comment: We use inetd instead of ssh -L because, among other things, ssh
-        -L tends to hang.
-
-**** Steps to set up a new tunnel 
-
-   2. Create a key on the originating host:
+   1. Create a key on the originating host:
 
       sudo ssh-keygen -N "" -b 4096 -f /root/.ssh/$TUNNEL_KEY
       sudo cat /root/.ssh/$TUNNEL_KEY.pub
 
-   3. Add this key to the user `smtptunnel' on the destination:
+**** Prepare destination
 
-      THEPUBLICKEY="ssh-rsa xxxxxxxxxxx"
+   2a. Install necessary software on the destination host:
+
+      sudo aptitude install netcat-openbsd
+
+   2b. Create a new user on the destination host:
+
+      sudo adduser --home=$TUNNEL_HOME --shell=`type rbash|cut -d' ' -f3` \
+                   --disabled-password $TUNNEL_USER
+      echo "exit" | sudo -u $TUNNEL_USER tee $TUNNEL_HOME/.bash_profile
+
+      # Also, make sure to add this user to AllowUsers in /etc/ssh/sshd_config.
+
+      # Note: We need bash, so we can not change the shell to something else.
+
+   2c. Add the public key from above to this user:
+
+      THE_PUBLIC_KEY="ssh-rsa xxxxxxxxxxx"
 
       sudo -u $TUNNEL_USER mkdir $TUNNEL_HOME/.ssh
       echo "command=\"nc localhost $DEST_PORT\",no-X11-forwarding,no-agent-forwarding,\
 no-port-forwarding $THE_PUBLIC_KEY" | sudo -u $TUNNEL_USER tee $TUNNEL_HOME/.ssh/authorized_keys2
+
+**** Set up the tunnel
 
    4. Test the key on the originating host:
 
       sudo ssh -v -l $TUNNEL_USER -i /root/.ssh/$TUNNEL_KEY destination.example.com
 
    5. Configure openbsd-inetd on the originating host:
+
+      # Comment: We use inetd instead of ssh -L because, among other things, ssh
+      #          -L tends to hang.
+
+      sudo aptitude install openbsd-inetd
 
       - /etc/inetd.conf
 :HIDDEN:
