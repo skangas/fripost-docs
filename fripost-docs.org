@@ -642,8 +642,3 @@ TODO: Add nice rules.
    `etckeeper' has the benefit of keeping track of file permissions, which git
    by itself will not.
 
-*** Warn when /etc has uncommitted changes on logout
-
-    echo "sudo etckeeper unclean && echo \"WARNING: You have uncommitted changes in /etc\" && sudo git diff" >> ~/.bash_logout
-
-
