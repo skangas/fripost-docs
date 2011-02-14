@@ -98,7 +98,7 @@ Make sure your private key is in ~/.ssh/authorized_keys2
     PasswordAuthentication no
     X11Forwarding no
     
-/etc/init.d/ssh restart
+sudo /etc/init.d/ssh restart
    
 # Without closing the current connection, try to connect to the server,
 # verifying that you can still connect.
@@ -147,30 +147,20 @@ sudo aptitude install logcheck syslog-summary
 
 ** Configuring aptitude and friends
 
-# We're going for a setup where we install many security updates automatically
-# using the package "unattended-upgrades".  Automated upgrades are in general not
-# a very good idea, but "unattended-upgrades" takes steps to mitigate the problems
-# with this kind of setup.  Given the Debian security teams track record in recent
-# years we believe the positives outweigh the negatives.
-# 
+# We are going to automatically install many security updates using the package
+# "unattended-upgrades".  Automated upgrades are in general not a very good
+# idea, but "unattended-upgrades" takes steps to mitigate the problems with this
+# approach.  Given the Debian security teams track record in recent years we
+# believe the positives outweigh the negatives.
+#
 # For the situations when unattended-upgrades fails (e.g. when there are
-# configuration changes), we should e-mail the administrator.  We will be using
-# apticron to do this until the version of unattended-upgrades in stable supports
-# mailing when an upgrade fails (the one in unstable does).
-# 
-sudo aptitude install apticron unattended-upgrades
+# configuration changes), there is an e-mail sent to the administrator.
+#
+sudo aptitude install unattended-upgrades
 
 :: /etc/apt/apt.conf
 
      :CONTENT:
-// Limit download speed
-//Acquire::http::Dl-Limit "70";
-
-/* Unsupported in the version of unattended-upgrades that is in stable,
- * but will later send an e-mail when an upgrade fails.
- * Until this works in stable, we will use apticron. */
-//Unattended-Upgrade::Mail "skangas@skangas.se";
-
 APT
 {
   // Increase cache size to some arbitrary size.
@@ -208,9 +198,17 @@ Aptitude
 }
      :END:
 
+# Using Debian squeeze:
+:: /etc/apt/apt.conf.d/50unattended-upgrades
+
+     Unattended-Upgrade::Mail "admin@fripost.org";
+     Acquire::http::Dl-Limit "70";
+
+# Using Debian lenny:
+sudo aptitude install apticron
 :: /etc/apticron/apticron.conf
 
-     EMAIL="skangas@skangas.se"
+     EMAIL="admin@fripost.org"
 
 ** Reconfigure exim
 
