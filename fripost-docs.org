@@ -212,6 +212,8 @@ sudo aptitude install apticron
 
 ** Reconfigure exim
 
+# FIXME: fix for squeeze
+
 sudo dpkg-reconfigure exim4-config
 
 # - select "mail sent by smarthost; no local mail"
@@ -230,8 +232,14 @@ sudo dpkg-reconfigure exim4-config
 # - split configuration?
 #   no
 
+
 * NEXT STEPS
+
 ** Configuring the backup solution
+
+*** Bacula configuration
+
+*** Simple rsync solution
 
    General idea [[http://wikis.sun.com/display/BigAdmin/Using+rdist+rsync+with+sudo+for+remote+updating][from here]].  This is just a basic setup for now, will need to be
    changed to rsnapshot or perhaps something even more sophisticated like
@@ -617,15 +625,15 @@ user_query = SELECT concat('/home/mail/virtual/',maildir) AS mail, XXX AS uid, X
    - sudo apt-get install apache2
 
 ** Necessary stuff to fix for security
+*** Bacula for backups
+    Also has tripwire-like capabilities.
+*** OSSEC
 
 *** Firewall rules
 TODO: Add nice rules.
 
 ** Ideas for improved security
-*** Increased rate of backups when the IMAP server goes down 
-*** Bacula for backups
-    Also has tripwire-like capabilities.
-*** Some kind of IDS
+
 *** Monitoring
 
 
