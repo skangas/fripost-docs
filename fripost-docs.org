@@ -264,17 +264,16 @@ sudo dpkg-reconfigure exim4-config
    4. Add script to crontab
 
 ** Configuring the e-mail servers
-
 *** Introduction
 **** Overview
 
-    We will be using one main mail storage server, accessible by users via IMAP.
-    This server should be referred to as the main `IMAP server'. We will have two
-    or more mail gateways that will relay e-mail to the main server over secure
-    connections.  These are called `smarthosts'.
+We will be using one main mail storage server, accessible by users via IMAP.
+This server should be referred to as the main `IMAP server'. We will have two or
+more mail gateways that will relay e-mail to the main server over secure
+connections.  These are called `smarthosts'.
 
-    The main server will also be responsible for keeping all users in an MySQL
-    database that will be replicated using MySQL.
+The main server will also be responsible for keeping all users in an MySQL
+database that will be replicated using MySQL.
 
 **** Definitions
 
@@ -532,28 +531,33 @@ SET character_set_client = @saved_cs_client;
 
 **** Test delivery
 
-    - /etc/postfix/main.cf
+- /etc/postfix/main.cf
 :HIDDEN:
 # Not really needed until we switch to using Courier maildrop
 maildrop_destination_recipient_limit = 1
 
 virtual_mailbox_base = /home/mail/virtual
 :END:
-    - sudo mkdir -p /home/mail/virtual/fripost.org/example/
-    - mysql -u root -p
-      INSERT INTO mailbox (username,password,name,maildir,domain)
-      VALUES ('exempel@fripost.org','test666','Exempelanvändare','fripost.org/exempel/Maildir/','fripost.org');
-    - /etc/init.d/postfix restart
 
-    Now it should work to send an e-mail to exempel@fripost.org
+sudo mkdir -p /home/mail/virtual/fripost.org/example/
+mysql -u root -p
 
-**** Setting up dovecot
+    INSERT INTO mailbox (username,password,name,maildir,domain)
+    VALUES ('exempel@fripost.org','test666','Exempelanvändare','fripost.org/exempel/Maildir/','fripost.org');
 
-    - sudo aptitude install dovecot-imapd
-    - /etc/dovecot/dovecot.conf
+sudo /etc/init.d/postfix restart
 
-Note: These settings are already in the file but commented out or set to other
-      values.
+echo "test at `date`"|mail -s "test" exempel@fripostorg
+
+**** Configuring dovecot
+
+sudo aptitude install dovecot-imapd
+
+:: /etc/dovecot/dovecot.conf
+
+# Note: These settings are already in the file but commented out or set to other
+#       values.
+
 :HIDDEN:
 protocols = imaps
 protocol imap {
@@ -586,7 +590,9 @@ userdb sql {
 # Do not needlessly run as root
 user = nobody
 :END:
-    - /etc/dovecot/dovecot-sql.conf
+
+:: /etc/dovecot/dovecot-sql.conf
+
 :HIDDEN:
 driver = mysql
 connect = host=127.0.0.1 port=3306 user=XXX password=XXX dbname=mail
@@ -599,26 +605,27 @@ password_query = SELECT username AS user, password FROM mailbox WHERE username =
 # replace XXX with relevant numbers for the system
 user_query = SELECT concat('/home/mail/virtual/',maildir) AS mail, XXX AS uid, XXX AS gid FROM mailbox WHERE username = '%u' AND domain = '%d'
 :END:
-    - sudo /etc/init.d/dovecot restart
 
-    Provided there is a user, you should now be able to login using any IMAP
-    client.
+sudo /etc/init.d/dovecot restart
+
+# Provided there is a user, you should now be able to login using any IMAP
+# client.
 
 *** Configuring a new smarthost to relay e-mail to the main IMAP server
 
-    First setup an SSH tunnel between the hosts according to instructions given
-    above in this document.
+First setup an SSH tunnel between the hosts according to instructions given
+above.
 
-    Next, you need to configure postfix on the smarthost to relay emails through
-    the tunnel:
-       
-       One quick-and-dirty example to try it out is:
-       - /etc/postfix/main.cf
-         relay_domains  = fripost.org
-         transport_maps = hash:/etc/postfix/transport
-       - /etc/postfix/transport
-         fripost.org smtp:localhost:1917
-       - sudo postmap hash:/etc/postfix/transport
+Next, we need to configure postfix on the smarthost to relay emails through the
+tunnel:
+   
+   One quick-and-dirty example to try it out is:
+   - /etc/postfix/main.cf
+     relay_domains  = fripost.org
+     transport_maps = hash:/etc/postfix/transport
+   - /etc/postfix/transport
+     fripost.org smtp:localhost:1917
+   - sudo postmap hash:/etc/postfix/transport
 
 ** Configuring the webserver
 
@@ -626,7 +633,7 @@ user_query = SELECT concat('/home/mail/virtual/',maildir) AS mail, XXX AS uid, X
 
 ** Necessary stuff to fix for security
 *** Bacula for backups
-    Also has tripwire-like capabilities.
+Also has tripwire-like capabilities.
 *** OSSEC
 
 *** Firewall rules
