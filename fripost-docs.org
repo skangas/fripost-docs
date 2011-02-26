@@ -264,17 +264,16 @@ sudo dpkg-reconfigure exim4-config
    4. Add script to crontab
 
 ** Configuring the e-mail servers
-
 *** Introduction
 **** Overview
 
-    We will be using one main mail storage server, accessible by users via IMAP.
-    This server should be referred to as the main `IMAP server'. We will have two
-    or more mail gateways that will relay e-mail to the main server over secure
-    connections.  These are called `smarthosts'.
+We will be using one main mail storage server, accessible by users via IMAP.
+This server should be referred to as the main `IMAP server'. We will have two or
+more mail gateways that will relay e-mail to the main server over secure
+connections.  These are called `smarthosts'.
 
-    The main server will also be responsible for keeping all users in an MySQL
-    database that will be replicated using MySQL.
+The main server will also be responsible for keeping all users in an MySQL
+database that will be replicated using MySQL.
 
 **** Definitions
 
@@ -354,22 +353,174 @@ no-port-forwarding $THE_PUBLIC_KEY" | sudo -u $TUNNEL_USER tee $TUNNEL_HOME/.ssh
 *** Installing MySQL
      - sudo apt-get install mysql-server
      - generate a long (25 characters) password for the mysql root user
-     - /etc/mysql/my.cnf
-:HIDDEN:
-skip-innodb
-:END:
+     - /etc/mysql/my.cnf: skip-innodb
+*** MySQL on the main IMAP server
+**** Overview
+
+We will use four tables `alias', `domain', `log' and `mailbox'.
+  
+  
+***** mysql> show tables;
++----------------+
+| Tables_in_mail |
++----------------+
+| alias          | 
+| domain         | 
+| log            | 
+| mailbox        | 
++----------------+
+4 rows in set (0.00 sec)
+
+***** mysql> describe alias;
++-------------+--------------+------+-----+---------------------+-------+
+| Field       | Type         | Null | Key | Default             | Extra |
++-------------+--------------+------+-----+---------------------+-------+
+| address     | varchar(255) | NO   | PRI |                     |       | 
+| goto        | text         | NO   |     | NULL                |       | 
+| domain      | varchar(255) | NO   |     |                     |       | 
+| create_date | datetime     | NO   |     | 0000-00-00 00:00:00 |       | 
+| change_date | timestamp    | NO   |     | CURRENT_TIMESTAMP   |       | 
+| active      | tinyint(4)   | NO   |     | 1                   |       | 
++-------------+--------------+------+-----+---------------------+-------+
+6 rows in set (0.00 sec)
+
+***** mysql> describe domain;
++-------------+--------------+------+-----+---------------------+-------+
+| Field       | Type         | Null | Key | Default             | Extra |
++-------------+--------------+------+-----+---------------------+-------+
+| domain      | varchar(255) | NO   | PRI |                     |       | 
+| description | varchar(255) | NO   |     |                     |       | 
+| create_date | datetime     | NO   |     | 0000-00-00 00:00:00 |       | 
+| change_date | timestamp    | NO   |     | CURRENT_TIMESTAMP   |       | 
+| active      | tinyint(4)   | NO   |     | 1                   |       | 
++-------------+--------------+------+-----+---------------------+-------+
+5 rows in set (0.00 sec)
+
+***** mysql> describe log;
++-------+-------------+------+-----+-------------------+----------------+
+| Field | Type        | Null | Key | Default           | Extra          |
++-------+-------------+------+-----+-------------------+----------------+
+| id    | int(11)     | NO   | PRI | NULL              | auto_increment | 
+| user  | varchar(20) | NO   |     |                   |                | 
+| event | text        | NO   |     | NULL              |                | 
+| date  | timestamp   | NO   |     | CURRENT_TIMESTAMP |                | 
++-------+-------------+------+-----+-------------------+----------------+
+4 rows in set (0.00 sec)
+
+***** mysql> describe mailbox;
++-------------+--------------+------+-----+---------------------+-------+
+| Field       | Type         | Null | Key | Default             | Extra |
++-------------+--------------+------+-----+---------------------+-------+
+| username    | varchar(255) | NO   | PRI |                     |       | 
+| password    | varchar(255) | NO   |     |                     |       | 
+| name        | varchar(255) | NO   |     |                     |       | 
+| maildir     | varchar(255) | NO   |     |                     |       | 
+| domain      | varchar(255) | NO   |     |                     |       | 
+| create_date | datetime     | NO   |     | 0000-00-00 00:00:00 |       | 
+| change_date | timestamp    | NO   |     | CURRENT_TIMESTAMP   |       | 
+| active      | tinyint(4)   | NO   |     | 1                   |       | 
++-------------+--------------+------+-----+---------------------+-------+
+8 rows in set (0.00 sec)
+
+**** Steps to produce it
+mysql -u root -p
+
+   create database mail;
+
+sudo mysql -u root -p --database=mail
+FIXME: Not 100 % up to date
+       :HIDDEN:
+DROP TABLE IF EXISTS `alias`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `alias` (
+  `address` varchar(255) NOT NULL default '',
+  `goto` text NOT NULL,
+  `domain` varchar(255) NOT NULL default '',
+  `create_date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `change_date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `active` tinyint(4) NOT NULL default '1',
+  PRIMARY KEY  (`address`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Virtual Aliases - mysql_virtual_\nalias_maps';
+SET character_set_client = @saved_cs_client;
+
+DROP TABLE IF EXISTS `domain`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `domain` (
+  `domain` varchar(255) NOT NULL default '',
+  `description` varchar(255) NOT NULL default '',
+  `create_date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `change_date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `active` tinyint(4) NOT NULL default '1',
+  PRIMARY KEY  (`domain`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Virtual Domains - mysql_virtual_\ndomains_maps';
+SET character_set_client = @saved_cs_client;
+
+DROP TABLE IF EXISTS `log`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `log` (
+  `id` int(11) NOT NULL auto_increment,
+  `user` varchar(20) NOT NULL default '',
+  `event` text NOT NULL,
+  `date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=106 DEFAULT CHARSET=utf8 COMMENT='log table';
+SET character_set_client = @saved_cs_client;
+
+DROP TABLE IF EXISTS `mailbox`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `mailbox` (
+  `username` varchar(255) NOT NULL default '',
+  `password` varchar(255) NOT NULL default '',
+  `name` varchar(255) NOT NULL default '',
+  `maildir` varchar(255) NOT NULL default '',
+  `domain` varchar(255) NOT NULL default '',
+  `create_date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `change_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `active` tinyint(4) NOT NULL default '1',
+  PRIMARY KEY  (`username`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Virtual Mailboxes - mysql_virtua\nl_mailbox_maps';
+SET character_set_client = @saved_cs_client;
+        :END:
+
+mysql -u root -p
+
+# Create triggers
+
+       use mail;
+
+       DELIMITER $$
+       CREATE TRIGGER alias_set_created_on_insert before insert on alias
+         for each row begin set new.create_date = current_timestamp; end$$
+       CREATE TRIGGER domain_set_created_on_insert before insert on domain
+         for each row begin set new.create_date = current_timestamp; end$$
+       CREATE TRIGGER mailbox_set_created_on_insert before insert on mailbox 
+         for each row begin set new.create_date = current_timestamp; end$$
+       DELIMITER ;
+       
+# Create mail user
+
+       CREATE USER 'mail'@'localhost' IDENTIFIED BY 'mijhl9hniiMu5WxvvtdgsacxZ';
+       GRANT SELECT ON mail.alias   TO 'mail'@'localhost';
+       GRANT SELECT ON mail.domain  TO 'mail'@'localhost';
+       GRANT SELECT ON mail.mailbox TO 'mail'@'localhost';
+
 *** Configuring the MySQL replication
 ***** Overview
-     [[http://dev.mysql.com/doc/refman/5.0/en/replication.html][MySQL 5.0 Reference Manual :: 16 Replication]]
+[[http://dev.mysql.com/doc/refman/5.0/en/replication.html][MySQL 5.0 Reference Manual :: 16 Replication]]
 
-     We will use MySQL replication to keep the MySQL user data on the smarthosts
-     in sync with the data held on the main IMAP server.
 
-     We begin by setting up an SSH tunnel, as described above.  The rest is
-     fairly straight-forward.  Here are instructions adapted from the MySQL
-     manual.
+We will use MySQL replication to keep the MySQL user data on the smarthosts
+in sync with the data held on the main IMAP server.
 
-     - Set up the SSH tunnel.
+We begin by setting up an SSH tunnel, as described above.  The rest is
+fairly straight-forward.  Here are instructions adapted from the MySQL
+manual.
+
+- Set up the SSH tunnel.
 
 ***** Configure the master
 
@@ -606,19 +757,11 @@ user_query = SELECT concat('/home/mail/virtual/',maildir) AS mail, XXX AS uid, X
 
 *** Configuring a new smarthost to relay e-mail to the main IMAP server
 
-    First setup an SSH tunnel between the hosts according to instructions given
-    above in this document.
+First setup an SSH tunnel between the hosts according to instructions given
+above in this document.
 
-    Next, you need to configure postfix on the smarthost to relay emails through
-    the tunnel:
-       
-       One quick-and-dirty example to try it out is:
-       - /etc/postfix/main.cf
-         relay_domains  = fripost.org
-         transport_maps = hash:/etc/postfix/transport
-       - /etc/postfix/transport
-         fripost.org smtp:localhost:1917
-       - sudo postmap hash:/etc/postfix/transport
+Next, you need to configure postfix on the smarthost to relay emails through
+the tunnel.
 
 ** Configuring the webserver
 
@@ -626,7 +769,7 @@ user_query = SELECT concat('/home/mail/virtual/',maildir) AS mail, XXX AS uid, X
 
 ** Necessary stuff to fix for security
 *** Bacula for backups
-    Also has tripwire-like capabilities.
+Also has tripwire-like capabilities.
 *** OSSEC
 
 *** Firewall rules
