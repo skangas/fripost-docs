@@ -312,7 +312,7 @@ smarthost = the server receiving email from the internet (configured as MX)
 
       sudo adduser --home=$TUNNEL_HOME --shell=`type rbash|cut -d' ' -f3` \
                    --disabled-password $TUNNEL_USER
-      echo "exit" | sudo -u $TUNNEL_USER tee $TUNNEL_HOME/.bash_profile
+      echo "exit" | sudo -u $TUNNEL_USER tee -a $TUNNEL_HOME/.bash_profile
 
       # Also, make sure to add this user to AllowUsers in /etc/ssh/sshd_config.
 
@@ -322,9 +322,9 @@ smarthost = the server receiving email from the internet (configured as MX)
 
       THE_PUBLIC_KEY="ssh-rsa xxxxxxxxxxx"
 
-      sudo -u $TUNNEL_USER mkdir $TUNNEL_HOME/.ssh
+      sudo -u $TUNNEL_USER mkdir -p $TUNNEL_HOME/.ssh
       echo "command=\"nc localhost $DEST_PORT\",no-X11-forwarding,no-agent-forwarding,\
-no-port-forwarding $THE_PUBLIC_KEY" | sudo -u $TUNNEL_USER tee $TUNNEL_HOME/.ssh/authorized_keys2
+no-port-forwarding $THE_PUBLIC_KEY" | sudo -u $TUNNEL_USER tee -a $TUNNEL_HOME/.ssh/authorized_keys2
 
 **** Set up the tunnel
 
