@@ -776,12 +776,28 @@ sudo /etc/init.d/dovecot restart
 # client.
 
 *** Configuring a new smarthost to relay e-mail to the main IMAP server
+**** Overview
 
-First setup an SSH tunnel between the hosts according to instructions given
-above.
+We relay mail from our smarthosts to the main IMAP server.
 
-Next, we need to configure postfix on the smarthost to relay emails through the
-tunnel.
+This is to avoid having a single poin of failure and to separate concerns. The
+IMAP server then only needs to deal with authenticated clients and the
+smarthosts.
+
+**** Prerequisites 
+
+Before this can work we must make sure that:
+- the MySQL replication is working
+- there is an SSH tunnel for the smtp
+
+If they are both setup, we can configure postfix on the smarthost to relay
+emails through the tunnel.
+
+**** Configuration files
+
+TODO: add the necessary configuration files
+
+
 
 ** Configuring the webserver
 
