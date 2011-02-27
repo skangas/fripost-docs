@@ -359,7 +359,6 @@ no-port-forwarding $THE_PUBLIC_KEY" | sudo -u $TUNNEL_USER tee -a $TUNNEL_HOME/.
 
 We will use four tables `alias', `domain', `log' and `mailbox'.
   
-  
 ***** mysql> show tables;
 +----------------+
 | Tables_in_mail |
@@ -611,99 +610,11 @@ mysql -u root -p
 *** Configuring the main IMAP server
 **** /etc/postfix/main.cf
 
-**** MySQL on the main IMAP server
-
-     - create database mail;
-
-     We will use four tables `alias', `domain', `log' and `mailbox'.
-     
-     // FIXME; add description of tables
-     :HIDDEN:
-mysql> show tables;
-
-mysql> describe alias;
-
-mysql> describe domain;
-
-mysql> describe log;
-
-mysql> describe mailbox;
-     :END:
-
-     - sudo mysql -u root -p --database=mail
-       :HIDDEN:
-DROP TABLE IF EXISTS `alias`;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-CREATE TABLE `alias` (
-  `address` varchar(255) NOT NULL default '',
-  `goto` text NOT NULL,
-  `domain` varchar(255) NOT NULL default '',
-  `create_date` datetime NOT NULL default '0000-00-00 00:00:00',
-  `change_date` datetime NOT NULL default '0000-00-00 00:00:00',
-  `active` tinyint(4) NOT NULL default '1',
-  PRIMARY KEY  (`address`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Virtual Aliases - mysql_virtual_\nalias_maps';
-SET character_set_client = @saved_cs_client;
-
-DROP TABLE IF EXISTS `domain`;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-CREATE TABLE `domain` (
-  `domain` varchar(255) NOT NULL default '',
-  `description` varchar(255) NOT NULL default '',
-  `create_date` datetime NOT NULL default '0000-00-00 00:00:00',
-  `change_date` datetime NOT NULL default '0000-00-00 00:00:00',
-  `active` tinyint(4) NOT NULL default '1',
-  PRIMARY KEY  (`domain`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Virtual Domains - mysql_virtual_\ndomains_maps';
-SET character_set_client = @saved_cs_client;
-
-DROP TABLE IF EXISTS `log`;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-CREATE TABLE `log` (
-  `id` int(11) NOT NULL auto_increment,
-  `user` varchar(20) NOT NULL default '',
-  `event` text NOT NULL,
-  `date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=106 DEFAULT CHARSET=utf8 COMMENT='log table';
-SET character_set_client = @saved_cs_client;
-
-DROP TABLE IF EXISTS `mailbox`;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-CREATE TABLE `mailbox` (
-  `username` varchar(255) NOT NULL default '',
-  `password` varchar(255) NOT NULL default '',
-  `name` varchar(255) NOT NULL default '',
-  `maildir` varchar(255) NOT NULL default '',
-  `domain` varchar(255) NOT NULL default '',
-  `create_date` datetime NOT NULL default '0000-00-00 00:00:00',
-  `change_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `active` tinyint(4) NOT NULL default '1',
-  PRIMARY KEY  (`username`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Virtual Mailboxes - mysql_virtua\nl_mailbox_maps';
-SET character_set_client = @saved_cs_client;
-        :END:
-     - mysql -u root -p
-       CREATE USER 'mail'@'localhost' IDENTIFIED BY 'secret';
-       GRANT SELECT ON mail.alias   TO 'mail'@'localhost';
-       GRANT SELECT ON mail.domain  TO 'mail'@'localhost';
-       GRANT SELECT ON mail.mailbox TO 'mail'@'localhost';
+TODO: add file contents
 
 **** Test delivery
 
-- /etc/postfix/main.cf
-:HIDDEN:
-# Not really needed until we switch to using Courier maildrop
-maildrop_destination_recipient_limit = 1
-
-virtual_mailbox_base = /home/mail/virtual
-:END:
-
-sudo mkdir -p /home/mail/virtual/fripost.org/example/
+sudo mkdir -p /home/mail/virtual/fripost.org/
 mysql -u root -p
 
     INSERT INTO mailbox (username,password,name,maildir,domain)
