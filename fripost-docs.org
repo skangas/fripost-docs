@@ -136,7 +136,7 @@ sudo aptitude install logcheck syslog-summary
 
     ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ kernel:( \[[[:digit:]]+\.[[:digit:]]+\])? imklog [0-9.]+, log source = /proc/kmsg started.$
     ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ rsyslogd: \[origin software="rsyslogd" swVersion="[0-9.]+" x-pid="[0-9]+" x-info="http://www.rsyslog.com"\] restart$
-    ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ kernel: Kernel logging (proc) stopped.$
+    ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ kernel: Kernel logging \(proc\) stopped.$
     
 /etc/logcheck/ignore.d.server/ddclient
 :HIDDEN:
