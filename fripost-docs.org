@@ -512,89 +512,101 @@ mysql -u root -p
 ***** Overview
 [[http://dev.mysql.com/doc/refman/5.0/en/replication.html][MySQL 5.0 Reference Manual :: 16 Replication]]
 
-
 We will use MySQL replication to keep the MySQL user data on the smarthosts
 in sync with the data held on the main IMAP server.
 
-We begin by setting up an SSH tunnel, as described above.  The rest is
-fairly straight-forward.  Here are instructions adapted from the MySQL
-manual.
-
-- Set up the SSH tunnel.
+These instructions are mainly adapted from the MySQL manual.
 
 ***** Configure the master
 
-     - Add this to my.cnf:
-:HIDDEN:
-server-id		= 1
-log_bin			= /var/log/mysql/mysql-bin.log
-expire_logs_days	= 10
-max_binlog_size         = 100M
-binlog_do_db		= mail
-:END:
+ :: /etc/mysql/my.cnf:
 
-     - /etc/init.d/mysql restart
+    server-id		= 1
+    log_bin		= /var/log/mysql/mysql-bin.log
+    expire_logs_days	= 10
+    max_binlog_size	= 100M
+    binlog_do_db	= mail
+    
 
-     - Enter MySQL shell and create user with replication privileges:
-       mysql -u root -p
+/etc/init.d/mysql restart
 
-       # use only ASCII for <password>
-
-       GRANT REPLICATION SLAVE ON *.* TO 'slave_user'@'localhost' IDENTIFIED BY '<password>';
-       FLUSH PRIVILEGES;
-
-       USE mail;
-       FLUSH TABLES WITH READ LOCK;
-
-       # Save the output of this command:
-       SHOW MASTER STATUS;
-
-       unlock tables;
-       quit;
-
-       # Copy this file to the slave:
-       mysqldump -u root -p --opt mail > mydump.sql
-       
 ***** Configure the slave
+****** Set up an SSH tunnel 
 
-      - Enter the MySQL shell and create the database:
+We begin by setting up an SSH tunnel from the slave to the master, as described [[Configuring an SSH tunnel between two hosts][above]].
 
-        mysql -u root -p
-        CREATE DATABASE mail;
-        quit;
-  
-        mysql -u root -p --database=mail < mydump.sql
-  
-      - create a new temporary directory:
+****** Preparing steps to take on master
+
+# Enter MySQL shell and create a user with replication privileges.
+# NB: Use only ASCII for the <password>
+mysql -u root -p
+
+    GRANT REPLICATION SLAVE ON *.* TO 'slave_user'@'localhost' IDENTIFIED BY '<password>';
+    FLUSH PRIVILEGES;
+    USE mail;
+    FLUSH TABLES WITH READ LOCK;
+    quit;
+    
+# Make a database dump.
+
+mysqldump -u root -p --opt mail > mydump.sql
+
+# Now, copy this file to the slave.
+
+# Save the output of the SHOW MASTER STATUS COMMAND.
+mysql -u root -p
+
+    SHOW MASTER STATUS;
+    unlock tables;
+    quit;
+
+****** Slave configuration
+
+# Create a new temporary directory.
+# NOTE: It has to be outside of /tmp so the replication is not screwed up on e.g. power outage.
         
-        sudo mkdir /var/lib/mysql/tmp
-        sudo chown mysql:mysql !$
-        sudo chmod 0750 !$
+TMP_DIR=/var/lib/mysql/tmp
+sudo mkdir $TMP_DIR
+sudo chown mysql:mysql $TMP_DIR
+sudo chmod 0750 $TMP_DIR
 
-      - /etc/mysql/my.cnf
-:HIDDEN:
-tmpdir		= /var/lib/mysql/tmp
-# Note that the server-id must be different on all hosts
-server-id		= 2
-:END:
-      - /etc/init.d/mysql restart
+ :: /etc/mysql/my.cnf
 
-      SLAVE STOP;
-      # [[http://dev.mysql.com/doc/refman/5.0/en/change-master-to.html][12.5.2.1. CHANGE MASTER TO Syntax]]
-      # NOTE: fill in these values using output from SHOW MASTER STATUS; above
+    tmpdir		= /var/lib/mysql/tmp
+    # Note that the server-id must be different on all hosts
+    server-id		= 2
 
-      CHANGE MASTER TO
-      MASTER_HOST='127.0.0.1',
-      MASTER_PORT=1949,
-      MASTER_USER='slave_user',
-      MASTER_PASSWORD='<password>', MASTER_LOG_FILE='mysql-bin.000013', MASTER_LOG_POS=98;
+/etc/init.d/mysql restart
 
-      START SLAVE;
-      quit;
+# Enter the MySQL shell and create the database:
 
-***** Useful commands while debugging
-       start slave; stop slave;
-       show slave status\G
+mysql -u root -p
+
+    CREATE DATABASE mail;
+    quit;
+  
+mysql -u root -p --database=mail < mydump.sql
+  
+# [[http://dev.mysql.com/doc/refman/5.0/en/change-master-to.html][12.5.2.1. CHANGE MASTER TO Syntax]]
+# NOTE: fill in these values using output from SHOW MASTER STATUS; above
+# NOTE: filling this in my.cnf is deprecated
+
+mysql -u root -p
+
+    SLAVE STOP;
+
+    CHANGE MASTER TO
+    MASTER_HOST='127.0.0.1',
+    MASTER_PORT=1949,
+    MASTER_USER='slave_user',
+    MASTER_PASSWORD='<password>', MASTER_LOG_FILE='mysql-bin.000013', MASTER_LOG_POS=98;
+
+    START SLAVE;
+    show slave status\G
+
+# If it seems OK, just:
+
+    quit;
 
 *** Configuring the main IMAP server
 **** /etc/postfix/main.cf
