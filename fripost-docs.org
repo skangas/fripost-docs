@@ -714,6 +714,37 @@ TODO: add the necessary configuration files
 
    - sudo apt-get install apache2
 
+** Logging
+*** Overview
+We want to limit how much we log for privacy reasons. At the same time we want
+to be able to debug technical problems and detect intrusions.
+
+For the webmail, we only log messages of priority warn or higher.
+*** Configuration
+
+  :: /etc/rsyslog.conf
+
+    *.*;auth,authpriv.none;mail.err	-/var/log/syslog
+
+# NOTE: /var/log/mail.{err,warn} can be kept at the default
+# values since they do not contain any sensitive information.
+  :: /etc/logrotate.d/rsyslog
+
+    /var/log/mail.log
+    /var/log/mail.info
+    {
+    	rotate 3
+    	daily
+    	missingok
+    	ifempty
+    	compress
+    	delaycompress
+    	sharedscripts
+    	postrotate
+    		invoke-rc.d rsyslog reload > /dev/null
+    	endscript
+    }
+
 ** Necessary stuff to fix for security
 *** Bacula for backups
 Also has tripwire-like capabilities.
