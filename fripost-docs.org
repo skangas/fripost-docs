@@ -251,8 +251,7 @@ sudo dpkg-reconfigure exim4-config
       - ssh-keygen -N "" -b 4096 -f ~/.ssh/backup_key
       - cat .ssh/backup_key.pub
    3. Create a user on the computer that will be backed up
-      - sudo adduser remupd
-      - sudo passwd -d remupd
+      - sudo adduser --disabled-password remupd
       - add the public key from above to ~remupd/.ssh/authorized_keys2
         prefix with: no-X11-forwarding,no-agent-forwarding,no-port-forwarding
       - test the key:
