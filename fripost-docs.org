@@ -39,6 +39,11 @@ sort of thing but instead as an ongoing effort.  Thus, while we strive to
 document all configuration that we consider stable enough, the documentation may
 sometimes lag behind.
 
+We do not believe in security through obscurity. This means we are aiming
+instead for a system that fulfills [[http://en.wikipedia.org/wiki/Kerckhoffs%27s_Principle][Kerckhoffs's Principle]]. However, some
+information below might have been changed to inconvenience a potential
+attacker. Beware and take according measures.
+
 We welcome all criticism, suggestions for improvements, additions etc.  Please
 send them to skangas@skangas.se.
 
