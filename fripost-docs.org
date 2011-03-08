@@ -765,22 +765,33 @@ TODO: Add nice rules.
 
 * NEED TO KNOW FOR SERVER ADMINS
 
+** Document your changes
+
+When you make changes to the system, document them here.
+
+The latest version of this document is always available from:
+
+    git clone git://github.com/skangas/fripost-docs.git
+
+Direct all patches to skangas@skangas.se.  Preferably you should use
+`git-format-patch' and `git-send-email'. Thanks.
+
 ** Use etckeeper
 
-   We keep /etc in a git repository using the tool etckeeper.
+We keep /etc in a git repository using the tool etckeeper.
 
-   This means that every time you make changes to any files in /etc, you are
-   expected to commit them using a descriptive commit message.  Please add a
-   signature (initials or your username) since all commits will be made as root.
+This means that every time you make changes to any files in /etc, you are
+expected to commit them using a descriptive commit message.  Please add a
+signature (initials or your username) since all commits will be made as root.
 
-   $ etckeeper commit "postfix: enable to relay messages to remote hosts via smtp /skangas"
+$ etckeeper commit "postfix: enable to relay messages to remote hosts via smtp /skangas"
 
-   If you do not commit your changes, the next system upgrade will fail and
-   whoever makes the upgrade will have to commit your changes for you.  They may
-   have to guess as to why you made your changes.  Please do not put your
-   co-administrators in this uncomfortable position.
+If you do not commit your changes, the next system upgrade will fail and
+whoever makes the upgrade will have to commit your changes for you.  They may
+have to guess as to why you made your changes.  Please do not put your
+co-administrators in this uncomfortable position.
 
-   It is also possible to use simple git commands in /etc, e.g. `git log'.
-   `etckeeper' has the benefit of keeping track of file permissions, which git
-   by itself will not.
+It is also possible to use simple git commands in /etc, e.g. `git log'.
+`etckeeper' has the benefit of keeping track of file permissions, which git
+by itself will not.
 
