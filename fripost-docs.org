@@ -795,3 +795,9 @@ It is also possible to use simple git commands in /etc, e.g. `git log'.
 `etckeeper' has the benefit of keeping track of file permissions, which git
 by itself will not.
 
+** Use fripost-tools
+
+We have written some tools to make administration tasks easier. They can be
+found at:
+
+    git clone git://github.com/skangas/fripost-tools.git
