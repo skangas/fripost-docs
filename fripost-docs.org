@@ -168,8 +168,7 @@ sudo aptitude install unattended-upgrades
      :CONTENT:
 APT
 {
-  // Increase cache size to some arbitrary size.
-  // Remove this line completely once we have apt v0.7.26 in stable. (it defaults to no limit)
+  // Remove this line once we have squeeze
   Cache-Limit "33554432";
 
   // Configuration for /etc/cron.daily/apt
