@@ -67,6 +67,12 @@ Used to keep track of /etc.  Install ASAP after install!
 # not needed on squeeze:
 cd /etc && sudo etckeeper init && sudo etckeeper commit "first commit"
 
+** Use GNU Emacs as the default editor
+
+# NOTE: Emacs is the default. If you prefer something else, use the EDITOR
+# environment variable.
+sudo update-alternatives --config editor
+
 ** Uninstall a bunch of unnecessary packages
 
 sudo aptitude remove --purge debian-faq dictionaries-common doc-debian \
