@@ -616,6 +616,67 @@ mysql -u root -p
 
 TODO: add file contents
 
+**** Setting up the MDA
+
+# The choice of deliver from dovecot for MDA was based on the support for the
+# mailsieve filter language, which is a nice DSL and has plugin support in
+# roundcube. maildrop lacks this support.
+
+# squeeze has dovecot-1.2. upgrade notes:
+# - we might want to upgrade to their sieve (instead of cmusieve)
+# - we want to add the -s flag to deliver in master.cf
+
+:: /etc/dovecot/dovecot.conf
+
+    protocol lda {
+      # Address to use when sending rejection mails.
+      postmaster_address = postmaster@fripost.org
+    
+      # Hostname to use in various parts of sent mails, eg. in Message-Id.
+      # Default is the system's real hostname.
+      hostname = imap.fripost.org
+    
+      # Support for dynamically loadable plugins. mail_plugins is a space separated
+      # list of plugins to load.
+      #mail_plugins =
+      #mail_plugin_dir = /usr/lib/dovecot/modules/lda
+    
+      # Binary to use for sending mails.
+      sendmail_path = /usr/lib/sendmail
+    
+      # UNIX socket path to master authentication server to find users.
+      auth_socket_path = /var/run/dovecot/auth-master
+    
+      # Enabling Sieve plugin for server-side mail filtering
+      mail_plugins = cmusieve
+    }
+
+    [...]
+
+      ## dovecot-lda specific settings
+      ##
+      socket listen {
+        master {
+          path = /var/run/dovecot/auth-master
+          mode = 0600
+          user = xxx # User running Dovecot LDA
+          #group = mail # Or alternatively mode 0660 + LDA user in this group
+        }
+      }
+
+:: /etc/postfix/master.cf
+
+    dovecot   unix  -       n       n       -       -       pipe
+      flags=DRhu user=xxx:xxx argv=/usr/lib/dovecot/deliver -f ${sender} -d ${recipient} -n
+    
+
+:: /etc/postfix/main.cf
+
+    virtual_transport = dovecot
+    dovecot_destination_recipient_limit = 1
+
+http://wiki.dovecot.org/LDA/Postfix
+http://www.tehinterweb.co.uk/roundcube/#pisieverules
 **** Test delivery
 
 sudo mkdir -p /home/mail/virtual/fripost.org/
