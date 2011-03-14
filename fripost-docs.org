@@ -60,10 +60,6 @@ send them to skangas@skangas.se.
 
 Used to keep track of /etc.  Install ASAP after install!
 
-:: /etc/etckeeper/etckeeper.conf
-
-     AVOID_COMMIT_BEFORE_INSTALL=1
-
 # not needed on squeeze:
 cd /etc && sudo etckeeper init && sudo etckeeper commit "first commit"
 
