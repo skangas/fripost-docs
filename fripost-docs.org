@@ -47,8 +47,7 @@ attacker. Beware and take according measures.
 We welcome all criticism, suggestions for improvements, additions etc.  Please
 send them to skangas@skangas.se.
 
-* BASIC SETUP -- Checklist after having installed a new Debian GNU/Linux-server
-
+* Basic Setup -- Checklist after having installed a new Debian GNU/Linux-server
 ** Basic installation instructions
 
 - Use expert install to maximize fun.
@@ -150,7 +149,6 @@ sudo aptitude install logcheck syslog-summary
     + ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ ddclient\[[0-9]+\]: WARNING:  file /var/cache/ddclient/ddclient.cache, line [0-9]+: Invalid Value for keyword 'ip' = ''$
     + ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ ddclient\[[0-9]+\]: WARNING:  updating [._[:alnum:]-]+: nochg: No update required; unnecessary attempts to change to the current address are considered abusive$
 
-
 ** Configuring aptitude and friends
 
 # We are going to automatically install many security updates using the package
@@ -238,8 +236,7 @@ sudo dpkg-reconfigure exim4-config
 #   no
 
 
-* NEXT STEPS
-
+* Next Steps
 ** Configuring the backup solution
 
 *** Bacula configuration
@@ -774,7 +771,6 @@ emails through the tunnel.
 TODO: add the necessary configuration files
 
 
-
 ** Configuring the webserver
 
    - sudo apt-get install apache2
@@ -823,6 +819,38 @@ TODO: Add nice rules.
 *** Monitoring
 
 
+* Hardening
+** Overview
+
+The [[http://www.debian.org/doc/manuals/securing-debian-howto/][Securing Debian Manual]] is the definitive reference for Debian security.
+
+These are just some quick notes for easy access to the administrators.
+
+** rkhunter
+
+sudo aptitude install rkhunter
+
+sudo rkhunter -c --nomow --rwo
+
+:: /etc/rkhunter.conf
+
+    MAIL-ON-WARNING=admin@fripost.org
+
+    ALLOWHIDDENFILE=/etc/.gitignore
+    ALLOWHIDDENFILE=/etc/.etckeeper
+    
+    # in case whitelisting is needed, use something like:
+    # (whitespace important)
+    APP_WHITELIST=" openssl:0.9.8g sshd:4.7p1 "
+
+:: /etc/default/rkhunter
+
+    REPORT_EMAIL="admin@fripost.org"
+    NICE="19"
+
+# testing:
+
+sudo rkhunter -c --nomow --rwo
 
 * NEED TO KNOW FOR SERVER ADMINS
 
