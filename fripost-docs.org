@@ -838,10 +838,23 @@ sudo rkhunter -c --nomow --rwo
 
     ALLOWHIDDENFILE=/etc/.gitignore
     ALLOWHIDDENFILE=/etc/.etckeeper
+
+    # something like: (adapt port as needed)
+    INETD_ALLOWED_SVC=127.0.0.1:2000
     
     # in case whitelisting is needed, use something like:
     # (whitespace important)
     APP_WHITELIST=" openssl:0.9.8g sshd:4.7p1 "
+
+#### ALSO, do this (not needed for squeeze)
+
++# apps test is disabled by default as it triggers warnings about outdated 
++# applications (and warns about possible security risk: we better trust
++# the Debian Security Team).
++#
+ ENABLE_TESTS="all"
+-DISABLE_TESTS="suspscan hidden_procs deleted_files packet_cap_apps"
++DISABLE_TESTS="suspscan hidden_procs deleted_files packet_cap_apps apps"
 
 :: /etc/default/rkhunter
 
