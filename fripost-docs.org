@@ -243,26 +243,26 @@ sudo dpkg-reconfigure exim4-config
 
 *** Simple rsync solution
 
-   General idea [[http://wikis.sun.com/display/BigAdmin/Using+rdist+rsync+with+sudo+for+remote+updating][from here]].  This is just a basic setup for now, will need to be
-   changed to rsnapshot or perhaps something even more sophisticated like
-   bacula.
+General idea [[http://wikis.sun.com/display/BigAdmin/Using+rdist+rsync+with+sudo+for+remote+updating][from here]].  This is just a basic setup for now, will need to be
+changed to rsnapshot or perhaps something even more sophisticated like bacula.
 
-   1. Install rsync
+1. Install rsync
       - sudo aptitude install rsync
-   2. Create a key on the backup computer
-      - ssh-keygen -N "" -b 4096 -f ~/.ssh/backup_key
-      - cat .ssh/backup_key.pub
-   3. Create a user on the computer that will be backed up
+2. Create a key on the backup computer:
+      - sudo mkdir /root/.ssh/backup_key
+      - sudo ssh-keygen -N "" -b 4096 -f /root/.ssh/backup_key
+      - cat /root/.ssh/backup_key.pub
+3. Create a user on the computer that will be backed up
       - sudo adduser --disabled-password remupd
       - add the public key from above to ~remupd/.ssh/authorized_keys2
         prefix with: no-X11-forwarding,no-agent-forwarding,no-port-forwarding
-      - test the key:
-        ssh -i ~/.ssh/backup_key -l remupd example.com
-      - add remupd to sudo:
+      - sudo EDITOR="emacs" visudo
         Cmnd_Alias      RSYNCDIST=/usr/bin/rsync
         remupd	ALL=NOPASSWD:RSYNCDIST
-   3. Create a script on the backup computer to automatically backup
-   4. Add script to crontab
+4. Test the key from the backup computer:
+      - ssh -i ~/.ssh/backup_key -l remupd example.com
+5. Create a script on the backup computer to automatically backup
+6. Add script to crontab
 
 ** Configuring the e-mail servers
 *** Introduction
