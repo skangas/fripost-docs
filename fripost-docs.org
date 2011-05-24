@@ -115,6 +115,12 @@ sudo aptitude install logcheck syslog-summary harden-servers
 # during configuration.  Therefore, only optionally:
 sudo aptitude install harden-clients
 
+** Forward root email 
+
+:: /etc/aliases
+
+    root: admin@fripost.org
+
 ** Configure logcheck
 
 sudo aptitude install logcheck syslog-summary
