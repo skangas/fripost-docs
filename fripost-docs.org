@@ -99,12 +99,6 @@ sudo /etc/init.d/ssh restart
 # Without closing the current connection, try to connect to the server,
 # verifying that you can still connect.
 
-** Uninstall a bunch of unnecessary packages
-
-sudo aptitude remove --purge debian-faq dictionaries-common doc-debian \
-doc-linux-text iamerican ibritish ispell laptop-detect nfs-common \
-openbsd-inetd portmap tasksel tasksel-data w3m
-
 ** Packages to install
 *** Administrative
 
@@ -201,6 +195,12 @@ sudo aptitude install unattended-upgrades
 :: /etc/apt/apt.conf.d/50unattended-upgrades
 
      Unattended-Upgrade::Mail "admin@fripost.org";
+
+** Uninstall a bunch of unnecessary packages
+
+sudo aptitude remove --purge debian-faq dictionaries-common doc-debian \
+doc-linux-text iamerican ibritish ispell laptop-detect nfs-common \
+openbsd-inetd portmap tasksel tasksel-data w3m
 
 ** Reconfigure exim
 
