@@ -165,54 +165,42 @@ sudo aptitude install unattended-upgrades
 
 :: /etc/apt/apt.conf
 
-     :CONTENT:
-APT
-{
-  // Remove this line once we have squeeze
-  Cache-Limit "33554432";
-
-  // Configuration for /etc/cron.daily/apt
-  Periodic
-  {
-     // Do "apt-get update" automatically every n-days (0=disable)
-     Update-Package-Lists "1";
-     // Do "apt-get autoclean" every n-days (0=disable)
-     AutocleanInterval "1";
-     // Do "apt-get upgrade --download-only" every n-days (0=disable)
-     Download-Upgradeable-Packages "1";
-     // Run the "unattended-upgrade" security upgrade script every n days
-     Unattended-Upgrade "1";
-  }
-};
-
-Aptitude
-{
-  UI
-  {
-     Autoclean-After-Update:         true;
-     Auto-Fix-Broken:                false;
-     Keep-Recommends:                true;
-     Recommends-Important:           true;
-     Description-Visible-By-Default: false;
-     HelpBar                         false;
-     Menubar-Autohide                true;
-     Purge-Unused:                   true;
-     Prompt-On-Exit                  false;
-  }
-}
-     :END:
+    APT
+    {
+      // Configuration for /etc/cron.daily/apt
+      Periodic
+      {
+         // Do "apt-get update" automatically every n-days (0=disable)
+         Update-Package-Lists "1";
+         // Do "apt-get autoclean" every n-days (0=disable)
+         AutocleanInterval "1";
+         // Do "apt-get upgrade --download-only" every n-days (0=disable)
+         Download-Upgradeable-Packages "1";
+         // Run the "unattended-upgrade" security upgrade script every n days
+         Unattended-Upgrade "1";
+      }
+    };
+    
+    Aptitude
+    {
+      UI
+      {
+         Autoclean-After-Update:         true;
+         Auto-Fix-Broken:                false;
+         Keep-Recommends:                true;
+         Recommends-Important:           true;
+         Description-Visible-By-Default: false;
+         HelpBar                         false;
+         Menubar-Autohide                true;
+         Purge-Unused:                   true;
+         Prompt-On-Exit                  false;
+      }
+    }
 
 # Using Debian squeeze:
 :: /etc/apt/apt.conf.d/50unattended-upgrades
 
      Unattended-Upgrade::Mail "admin@fripost.org";
-     Acquire::http::Dl-Limit "70";
-
-# Using Debian lenny:
-sudo aptitude install apticron
-:: /etc/apticron/apticron.conf
-
-     EMAIL="admin@fripost.org"
 
 ** Reconfigure exim
 
