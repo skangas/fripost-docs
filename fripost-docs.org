@@ -66,6 +66,38 @@ Used to keep track of /etc.  Install ASAP after install!
 sudo apt-get install emacs23-nox
 
 sudo update-alternatives --config editor
+ 
+** Configure sudo
+
+sudo apt-get install sudo
+
+# If you disabled root account during installation, the default account is
+# already in the sudo group.  Otherwise, follow these steps:
+
+sudo adduser myuser sudo
+
+sudo EDITOR="emacs" visudo
+
+     %sudo ALL= (ALL) ALL
+
+** Configure sshd
+
+Make sure your private key is in ~/.ssh/authorized_keys2
+
+:: /etc/ssh/sshd_config
+
+    # Add relevant users here
+    AllowUsers xx yy zz
+    
+    # Change these settings
+    PermitRootLogin no
+    PasswordAuthentication no
+    X11Forwarding no
+    
+sudo /etc/init.d/ssh restart
+   
+# Without closing the current connection, try to connect to the server,
+# verifying that you can still connect.
 
 ** Uninstall a bunch of unnecessary packages
 
@@ -88,36 +120,6 @@ sudo aptitude install logcheck syslog-summary harden-servers
 # NB: harden-clients conflicts with telnet, which as we know is very handy
 # during configuration.  Therefore, only optionally:
 sudo aptitude install harden-clients
-
-** Configure sshd
-
-Make sure your private key is in ~/.ssh/authorized_keys2
-
-:: /etc/ssh/sshd_config
-
-    # Add relevant users here
-    AllowUsers xx yy zz
-    
-    # Change these settings
-    PermitRootLogin no
-    PasswordAuthentication no
-    X11Forwarding no
-    
-sudo /etc/init.d/ssh restart
-   
-# Without closing the current connection, try to connect to the server,
-# verifying that you can still connect.
- 
-** Configure sudo
-
-# If you disabled root account during installation, the default account is
-# already in the sudo group.  Otherwise, follow these steps:
-
-sudo adduser myuser sudo
-
-sudo EDITOR="emacs" visudo
-
-     %sudo ALL= (ALL) ALL
 
 ** Configure logcheck
 
