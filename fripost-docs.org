@@ -295,8 +295,9 @@ smarthost = the server receiving email from the internet (configured as MX)
 
 1. Create a key on the originating host:
 
-   sudo ssh-keygen -N "" -b 4096 -f /root/.ssh/$TUNNEL_KEY
-   sudo cat /root/.ssh/$TUNNEL_KEY.pub
+   sudo ssh-keygen -N "" -b 4096 -f /root/.ssh/$TUNNEL_KEY_FILE
+   sudo ssh-keygen -N "" -b 4096 -f /root/.ssh/$TUNNEL_KEY_FILE
+   sudo cat /root/.ssh/$TUNNEL_KEY_FILE.pub
 
 **** Prepare destination
 
@@ -326,7 +327,7 @@ no-port-forwarding $THE_PUBLIC_KEY" | sudo -u $TUNNEL_USER tee -a $TUNNEL_HOME/.
 
 4. Test the key on the originating host:
 
-   sudo ssh -v -l $TUNNEL_USER -i /root/.ssh/$TUNNEL_KEY destination.example.com
+   sudo ssh -v -l $TUNNEL_USER -i /root/.ssh/$TUNNEL_KEY_FILE destination.example.com
 
 5. Configure openbsd-inetd on the originating host:
 
@@ -335,11 +336,12 @@ no-port-forwarding $THE_PUBLIC_KEY" | sudo -u $TUNNEL_USER tee -a $TUNNEL_HOME/.
 
    sudo aptitude install openbsd-inetd
 
-   - /etc/inetd.conf
-:HIDDEN:
-127.0.0.1:$ORIGIN_PORT  stream  tcp     nowait  root    /usr/bin/ssh    -q -T -i /root/.ssh/tunnel_key smtptunnel@example.com
-:END:
-      sudo /etc/init.d/openbsd-inetd restart
+:: /etc/inetd.conf
+
+    127.0.0.1:$ORIGIN_PORT  stream  tcp     nowait  root    /usr/bin/ssh    -q -T -i /root/.ssh/$TUNNEL_KEY_FILE smtptunnel@example.com
+
+
+    sudo /etc/init.d/openbsd-inetd restart
 
 You should now be able to connect through the tunnel from the originating
 host using something like:
