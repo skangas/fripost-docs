@@ -770,6 +770,25 @@ TODO: add the necessary configuration files
 
    - sudo apt-get install apache2
 
+*** Configuring gitweb and gitolite
+
+# Note: incomplete steps
+
+sudo apt-get install gitolite gitweb
+
+sudo dpkg-reconfigure gitolite
+
+# Add the gitweb user to gitolite
+
+:: /var/lib/gitolite/.gitolite.rc
+    $REPO_UMASK = 0027;       # gets you 'rwxr-x---'
+
+sudo usermod -a -G gitolite www-data
+
+sudo /etc/init.d/apache2 stop
+
+sudo /etc/init.d/apache2 start
+
 ** Logging
 *** Overview
 We want to limit how much we log for privacy reasons. At the same time we want
